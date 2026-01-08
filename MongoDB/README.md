@@ -1,12 +1,17 @@
-# Homework #1 - MongoDB
+# Homework #1 – MongoDB
 
 ## Amazon Fine Food Reviews Analysis
 
-Analisi completa del dataset Amazon Fine Food Reviews utilizzando MongoDB come database NoSQL per storage, aggregazione e analisi di grandi volumi di recensioni.
+**Corso**: Sistemi Informativi Evoluti e Big Data – A.A. 2025-2026  
+**Autore**: Camossi Filippo (m. 734170)
+
+### Descrizione del Progetto
+
+Analisi completa del dataset Amazon Fine Food Reviews utilizzando **MongoDB** come database NoSQL per storage, aggregazione e analisi di grandi volumi di recensioni.
 
 ---
 
-## 📋 Descrizione del Progetto
+## Descrizione del Progetto
 
 Questo homework implementa un sistema completo di analisi delle recensioni che include:
 
@@ -45,7 +50,7 @@ Questo homework implementa un sistema completo di analisi delle recensioni che i
 
 ---
 
-## 🗂️ Struttura File
+## Struttura File
 
 ```
 MongoDB/
@@ -57,7 +62,7 @@ MongoDB/
 
 ---
 
-## 🛠️ Setup e Installazione
+## Setup e Installazione
 
 ### 1. Prerequisiti
 
@@ -109,7 +114,7 @@ jupyter notebook amazon_fine_food_reviews.ipynb
 
 ---
 
-## 🚀 Esecuzione
+## Esecuzione
 
 1. **Verifica MongoDB in esecuzione:**
 
@@ -127,11 +132,11 @@ jupyter notebook amazon_fine_food_reviews.ipynb
     - Sistema di raccomandazione
     - Analisi temporale
 
-⏱️ **Tempo stimato:** ~30-45 minuti (incluso caricamento dati)
+**Tempo stimato:** ~30-45 minuti (incluso caricamento dati)
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 **Amazon Fine Food Reviews**
 
@@ -149,7 +154,7 @@ jupyter notebook amazon_fine_food_reviews.ipynb
 
 ---
 
-## 🎯 Risultati Attesi
+## Risultati Attesi
 
 Dopo l'esecuzione completa del notebook, avrai:
 
@@ -162,7 +167,7 @@ Dopo l'esecuzione completa del notebook, avrai:
 
 ---
 
-## 📈 Metriche di Performance
+## Metriche di Performance
 
 **Sentiment Analysis (con parametri ottimizzati):**
 
@@ -178,7 +183,7 @@ Dopo l'esecuzione completa del notebook, avrai:
 
 ---
 
-## 🔍 Query MongoDB Interessanti
+## Query MongoDB Interessanti
 
 Alcune query MongoDB utilizzate nel progetto:
 
@@ -196,7 +201,7 @@ db.score_4.aggregate([{ $group: { _id: "$sentiment", count: { $sum: 1 } } }]);
 
 ---
 
-## 📚 Dipendenze Principali
+## Dipendenze Principali
 
 -   **pymongo**: Connessione e operazioni MongoDB
 -   **pandas**: Manipolazione e analisi dati
@@ -208,7 +213,7 @@ Vedi `requirements.txt` per la lista completa.
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### MongoDB non si connette
 
@@ -234,7 +239,7 @@ sudo systemctl start mongodb  # Linux
 
 ---
 
-## 📖 Documentazione Aggiuntiva
+## Documentazione Aggiuntiva
 
 -   [MongoDB Documentation](https://docs.mongodb.com/)
 -   [VADER Sentiment Analysis](https://github.com/cjhutto/vaderSentiment)
@@ -242,21 +247,10 @@ sudo systemctl start mongodb  # Linux
 
 ---
 
-## 💡 Possibili Estensioni
+## Possibili Estensioni
 
 -   Implementazione indici MongoDB per ottimizzare le query
 -   Sistema di raccomandazione con apprendimento online
 -   Topic modeling (LDA) per identificare temi nelle recensioni
 -   Dashboard interattiva con Streamlit o Dash
 -   Analisi di network degli utenti (graph analysis)
-
----
-
-## 👨‍💻 Autore
-
-Filippo Camossi  
-A.A. 2025-2026
-
----
-
-[← Torna al README principale](../README.md)
