@@ -2,15 +2,18 @@
 
 ## Analisi dei Pedaggi Autostradali
 
+**Corso**: Sistemi Informativi Evoluti e Big Data – A.A. 2025-2026  
+**Autore**: Camossi Filippo (m. 734170)
+
 ### Descrizione del Progetto
 
-Questo progetto implementa un'analisi MapReduce per calcolare il **pedaggio medio pagato da ogni tipo di veicolo** negli anni 2015 e 2025, evidenziando la variazione percentuale nel decennio.
+Questo progetto implementa un'analisi MapReduce per calcolare il **pedaggio medio pagato da ogni tipo di veicolo** negli anni 2015 e 2025, evidenziando la variazione nel decennio.
 
 ### Dataset
 
-Il dataset contiene i seguenti campi:
+Il dataset contiene i seguenti campi (separatore: virgola):
 
--   **IDVeicolo**: Identificativo univoco del veicolo (es. AB123CD)
+-   **IDVeicolo**: Targa del veicolo (es. AB123CD)
 -   **TipoVeicolo**: Categoria del veicolo (Auto, Moto, Camion, Autobus, Furgone)
 -   **Tratta**: Tratta autostradale (es. A1-Milano-Bologna)
 -   **Pedaggio**: Importo pagato in euro
@@ -24,12 +27,12 @@ Il dataset contiene i seguenti campi:
 
 ```
 MapReduce/
-├── DatasetGenerator.py     # Generatore del dataset
-├── mapreduce_mrjob.py      # Implementazione mrjob
-├── mapreduce_pyspark.py    # Implementazione PySpark
-├── requirements.txt        # Dipendenze Python
-├── README.md              # Questo file
-└── caselli_autostradali.csv  # Dataset generato (dopo esecuzione)
+├── DatasetGenerator.py        # Generatore del dataset (Faker)
+├── mapreduce_mrjob.py         # Implementazione mrjob
+├── mapreduce_pyspark.py       # Implementazione PySpark
+├── requirements.txt           # Dipendenze Python
+├── README.md                  # Questo file
+└── caselli_autostradali.csv   # Dataset generato (dopo esecuzione)
 ```
 
 ---
@@ -41,7 +44,9 @@ MapReduce/
 pip install -r requirements.txt
 ```
 
-**Nota per PySpark**: Assicurarsi di avere Java 8 o 11 installato e la variabile `JAVA_HOME` configurata.
+**Nota per PySpark**: Assicurarsi di avere Java 8+ installato e la variabile `JAVA_HOME` configurata.
+
+**Nota per Python 3.13**: Il file mrjob include una patch per compatibilità con il modulo deprecato `pipes`.
 
 ---
 
@@ -58,11 +63,7 @@ Genera il file `caselli_autostradali.csv` con 100.000 record.
 ### 2. Esecuzione mrjob
 
 ```bash
-# Senza combiner
 python mapreduce_mrjob.py caselli_autostradali.csv
-
-# Con combiner (ottimizzato)
-python mapreduce_mrjob.py caselli_autostradali.csv --use-combiner
 ```
 
 ### 3. Esecuzione PySpark
@@ -75,7 +76,7 @@ python mapreduce_pyspark.py
 
 ## Architettura MapReduce
 
-### Flusso Logico
+### Flusso Logico (mrjob)
 
 ```
                     ┌─────────────────────────────────────────────────────────┐
@@ -87,136 +88,98 @@ python mapreduce_pyspark.py
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                                    MAPPER                                        │
 │  Input:  Linea CSV                                                              │
-│  Output: (TipoVeicolo_Anno, (Pedaggio, 1))                                      │
+│  Output: (TipoVeicolo, [count_2015, sum_2015, count_2025, sum_2025])            │
 │                                                                                 │
-│  Esempio:                                                                       │
-│  "AB123CD;Camion;A1-Milano-Bologna;25.50;15/03/2025;Mattina;Milano"            │
+│  Esempio (record 2025):                                                         │
+│  "AB123CD,Camion,A1-Milano-Bologna,25.50,15/03/2025,Mattina,Milano"             │
 │                     ↓                                                           │
-│  ("Camion_2025", (25.50, 1))                                                   │
+│  ("Camion", [0, 0.0, 1, 25.50])                                                │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                              │
                                              ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              COMBINER (opzionale)                               │
-│  Aggregazione locale per ridurre il traffico di rete                           │
+│                                   COMBINER                                       │
+│  Aggregazione locale per ridurre il traffico di rete                            │
 │                                                                                 │
-│  Input:  ("Camion_2025", [(25.50, 1), (30.20, 1), (28.00, 1)])                 │
-│  Output: ("Camion_2025", (83.70, 3))                                           │
+│  Input:  ("Camion", [[0,0,1,25.5], [0,0,1,30.2], [1,20.1,0,0]])                │
+│  Output: ("Camion", [1, 20.1, 2, 55.7])                                        │
 │                                                                                 │
-│  ⚠️ Il combiner è applicabile perché la media può essere calcolata come:       │
-│     media = Σ(pedaggi) / Σ(conteggi)                                           │
+│  ⚠️ Il combiner è applicabile perché: media = Σ(pedaggi) / Σ(conteggi)         │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                              │
                                              ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                                   REDUCER                                        │
-│  Calcola la media finale per ogni chiave                                        │
+│  Aggregazione finale e calcolo medie + variazione                               │
 │                                                                                 │
-│  Input:  ("Camion_2025", [(somma1, count1), (somma2, count2), ...])            │
-│  Output: ("Camion_2025", {media: 24.78, transiti: 10234})                      │
-└─────────────────────────────────────────────────────────────────────────────────┘
-                                             │
-                                             ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          REDUCER STEP 2 (variazione)                            │
-│  Raggruppa per tipo veicolo e calcola variazione percentuale                   │
-│                                                                                 │
-│  Output finale:                                                                 │
-│  ("Camion", {media_2015: 20.32, media_2025: 24.78, variazione: +21.95%})       │
+│  Input:  ("Camion", [[c15, s15, c25, s25], ...])                               │
+│  Output: ("Camion", {Media_2015: 20.15, Media_2025: 23.89, Variazione: 3.74})  │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Considerazioni sulle Implementazioni
+## Risultati Ottenuti
 
-### Confronto mrjob vs PySpark
+Output dell'analisi su 100.000 record:
 
-| Aspetto                | mrjob                       | PySpark                                        |
-| ---------------------- | --------------------------- | ---------------------------------------------- |
-| **Semplicità**         | ✅ Più semplice da scrivere | ⚠️ Richiede più setup                          |
-| **Paradigma**          | MapReduce puro              | DataFrame + RDD + SQL                          |
-| **Performance locale** | Buona per dataset piccoli   | Overhead iniziale, migliore per grandi dataset |
-| **Scalabilità**        | Hadoop cluster              | Spark cluster (più veloce)                     |
-| **Debug**              | Più difficile               | Migliore (Spark UI)                            |
-| **Ottimizzazione**     | Manuale (combiner)          | Automatica (Catalyst optimizer)                |
+| Tipo Veicolo | Media 2015 (€) | Media 2025 (€) | Variazione (€) | Var. % |
+| ------------ | -------------- | -------------- | -------------- | ------ |
+| Camion       | 20.15          | 23.89          | +3.74          | +18.6% |
+| Autobus      | 14.50          | 17.32          | +2.82          | +19.4% |
+| Furgone      | 11.47          | 13.77          | +2.30          | +20.1% |
+| Auto         | 8.48           | 10.23          | +1.75          | +20.6% |
+| Moto         | 5.76           | 6.94           | +1.18          | +20.5% |
 
-### Considerazioni Qualitative
+I dati riflettono correttamente l'inflazione simulata del 15-25% sui pedaggi del 2025.
 
-#### mrjob
+---
 
--   **Pro**:
-    -   Sintassi fedele al paradigma MapReduce originale
-    -   Facile da comprendere per chi conosce Hadoop
-    -   Leggero, poche dipendenze
--   **Contro**:
-    -   Meno flessibile per analisi complesse
-    -   Performance limitata in locale
-    -   Debugging più complesso
+## Confronto Implementazioni
 
-#### PySpark
+### Analisi Quantitativa (100.000 record, esecuzione locale)
 
--   **Pro**:
-    -   Tre modalità (DataFrame, RDD, SQL) per flessibilità
-    -   Ottimizzazioni automatiche (lazy evaluation, catalyst optimizer)
-    -   Caching dei dati intermedi
-    -   Migliore per pipeline di analisi complesse
--   **Contro**:
-    -   Overhead di inizializzazione JVM
-    -   Maggiore consumo di memoria
-    -   Configurazione più complessa
+| Implementazione | Tempo      | Note                                |
+| --------------- | ---------- | ----------------------------------- |
+| **mrjob**       | **0.50 s** | Python puro, avvio immediato        |
+| **PySpark**     | **2.37 s** | Overhead inizializzazione JVM (~2s) |
 
-### Considerazioni Quantitative
+**Osservazione**: Su dataset di piccole dimensioni, mrjob risulta ~5x più veloce per l'assenza di overhead JVM. PySpark mostrerebbe vantaggi su dataset dell'ordine dei GB/TB in ambiente distribuito.
 
-Su un dataset di 100.000 record (esecuzione locale):
+### Analisi Qualitativa
 
-| Metodo                 | Tempo medio |
-| ---------------------- | ----------- |
-| mrjob (senza combiner) | ~8-12 sec   |
-| mrjob (con combiner)   | ~6-9 sec    |
-| PySpark DataFrame API  | ~3-5 sec    |
-| PySpark RDD API        | ~4-6 sec    |
-| PySpark SQL            | ~3-5 sec    |
-
-**Nota**: I tempi possono variare significativamente in base all'hardware.
+| Aspetto             | mrjob                           | PySpark                         |
+| ------------------- | ------------------------------- | ------------------------------- |
+| **Paradigma**       | Imperativo (Map/Combine/Reduce) | Dichiarativo (DataFrame API)    |
+| **Combiner**        | Esplicito nel codice            | Automatico (Catalyst optimizer) |
+| **Linee di codice** | ~80                             | ~65                             |
+| **Leggibilità**     | Richiede comprensione MR        | Più intuitivo (SQL-like)        |
+| **Scalabilità**     | Hadoop cluster                  | Spark cluster (in-memory)       |
+| **Debug**           | Output testuale                 | Spark UI                        |
 
 ### Uso del Combiner
 
-Il **combiner** è applicabile in questo caso perché la media può essere calcolata in modo incrementale:
+Il **combiner** è implementato esplicitamente in mrjob usando un vettore `[count_2015, sum_2015, count_2025, sum_2025]`:
+
+```python
+def combiner(self, key, values):
+    c15, s15, c25, s25 = 0, 0.0, 0, 0.0
+    for v in values:
+        c15 += v[0]; s15 += v[1]
+        c25 += v[2]; s25 += v[3]
+    yield key, [c15, s15, c25, s25]
+```
+
+Questo è possibile perché la media è calcolabile come:
 
 $$\bar{x} = \frac{\sum_{i=1}^{n} x_i}{n}$$
 
-Questo permette di aggregare parzialmente i dati:
-
--   **Senza combiner**: Tutti i record vengono inviati al reducer
--   **Con combiner**: Solo le somme parziali e i conteggi vengono inviati
-
-In PySpark, `reduceByKey` funge automaticamente sia da combiner che da reducer.
+In PySpark, l'ottimizzazione equivalente è gestita automaticamente dall'optimizer Catalyst tramite `HashAggregate`.
 
 ---
 
-## Risultati Attesi
+## Note Tecniche
 
-L'output mostra:
-
-1. **Media pedaggio 2015** per ogni tipo di veicolo
-2. **Media pedaggio 2025** per ogni tipo di veicolo
-3. **Variazione percentuale** (attesa: +15-25% per simulare l'inflazione)
-
-Esempio output:
-
-```
-Tipo Veicolo      Media 2015    Media 2025    Variazione
-─────────────────────────────────────────────────────────
-Auto              €      8.23   €      9.89   +    20.17%
-Autobus           €     14.12   €     16.94   +    19.97%
-Camion            €     19.45   €     23.41   +    20.36%
-Furgone           €     11.21   €     13.49   +    20.34%
-Moto              €      5.52   €      6.63   +    20.11%
-```
-
----
-
-## Autore
-
-Homework #4 - Sistemi per l'Elaborazione di Big Data (2024-2025)
+-   **Precisione floating-point**: Lieve differenza nella variazione Moto (1.17 in mrjob vs 1.18 in PySpark) dovuta alla diversa gestione dell'arrotondamento.
+-   **Patch Python 3.13**: mrjob richiede il modulo deprecato `pipes`, sostituito con `shlex`.
+-   **Dataset realistico**: Generato con libreria Faker (targhe e città italiane).
