@@ -1,123 +1,103 @@
 #!/usr/bin/env python
 # coding: utf-8
 """
-MapReduce - Analisi Pedaggi Autostradali (PySpark RDD API)
+MapReduce - Analisi Pedaggi Autostradali (PySpark)
 Calcola il pedaggio medio per tipo di veicolo (2015 vs 2025)
 """
 
 from pyspark import SparkConf, SparkContext
-import os
 import time
 
 def main():
-    """Funzione principale per l'analisi dei pedaggi con PySpark"""
-    
-    # -----------------------------
-    # Configurazione Spark in locale
-    # -----------------------------
-    conf = SparkConf() \
-        .setAppName("AnalisiPedaggiAutostradali") \
-        .setMaster("local[*]")  # usa tutti i core disponibili
-
-    # Forzare filesystem locale (evita errori HDFS)
-    conf.set("spark.hadoop.fs.defaultFS", "file:///")
-
+    conf = SparkConf().setAppName("PedaggiSinglePass").setMaster("local[*]")
     sc = SparkContext(conf=conf)
-    sc.setLogLevel("ERROR")
+    sc.setLogLevel("ERROR") 
 
-    # -----------------------------
-    # Percorso del file di input
-    # -----------------------------
     input_path = "caselli_autostradali.csv"
+    
+    start = time.time()
 
-    if not os.path.exists(input_path):
-        raise FileNotFoundError(f"File non trovato: {input_path}")
+    # Carica il file
+    raw_data = sc.textFile(input_path)
+    header = raw_data.first()
+    rdd = raw_data.filter(lambda x: x != header)
 
-    # Misurazione tempo (esclusa inizializzazione Spark/JVM)
-    start_time = time.time()
+    # Recupero indici delle colonne 
+    cols = header.split(",") 
+    
+    i_tipo, i_data, i_ped = cols.index("TipoVeicolo"), cols.index("DataTransito"), cols.index("Pedaggio")
 
-    # -----------------------------
-    # LOAD: Caricamento Dataset CSV
-    # -----------------------------
-    rdd = sc.textFile(input_path)
+    # FUNZIONE DI MAP
+    def parse_map(line):
+        """
+        - Chiave: TipoVeicolo
+        - Valore: Una tupla di 4 numeri (Somma2015, Count2015, Somma2025, Count2025)
+        """
+        f = line.split(",") 
+        
+        try:
+            # Estrazione Anno da formato GG/MM/YYYY
+            anno = f[i_data].split("/")[-1]
+            
+            # Filtro anni
+            if anno not in ["2015", "2025"]: 
+                return None
+            
+            pedaggio = float(f[i_ped])
+            tipo = f[i_tipo]
 
-    # Estrai header e rimuovilo dal dataset
-    header = rdd.first()
-    rdd_data = rdd.filter(lambda line: line != header)
+            # Struttura vettore: (Totale_€_15,  Numero_Transiti_15, Totale_€_25,  Numero_Transiti_25)
+            if anno == "2015":
+                # Dati primi due slot, zeri negli altri
+                return (tipo, (pedaggio, 1, 0.0, 0))
+            else: # anno == "2025"
+                # Dati ultimi due slot, zeri nei primi
+                return (tipo, (0.0, 0, pedaggio, 1))
+                
+        except (IndexError, ValueError):
+            return None
 
-    # Parsing header per trovare indici colonne
-    cols = header.split(",")
-    idx_tipo = cols.index("TipoVeicolo")
-    idx_data = cols.index("DataTransito")
-    idx_pedaggio = cols.index("Pedaggio")
+    # ESECUZIONE PIPELINE
+    stats = (rdd
+            # 1. FASE MAP: Trasforma le righe in vettori
+            .map(parse_map)
 
-    # -----------------------------
-    # MAP: Parsing righe ed estrazione campi
-    # -----------------------------
-    def parse_line(line):
-        """Estrae (TipoVeicolo, Anno, Pedaggio) da una riga CSV."""
-        fields = line.split(",")
-        tipo_veicolo = fields[idx_tipo]
-        # DataTransito formato GG/MM/YYYY -> estrai anno
-        anno = fields[idx_data].split("/")[-1]
-        pedaggio = float(fields[idx_pedaggio])
-        return (tipo_veicolo, anno, pedaggio)
+            # 2. FILTER: Rimuove NON 2015/2025
+            .filter(lambda x: x is not None)
+            
+            # 3. FASE REDUCE: Aggrega i vettori per ogni TipoVeicolo
+            #    Somma elemento per elemento:
+            #    (Sum15_A + Sum15_B, Count15_A + Count15_B, ...)
+            .reduceByKey(lambda a, b: (
+                a[0] + b[0], # Totale € 2015
+                a[1] + b[1], # Conteggio 2015
+                a[2] + b[2], # Totale € 2025
+                a[3] + b[3]  # Conteggio 2025
+            ))
+            
+            # 4. FINAL MAP: Calcolo delle medie aritmetiche e della variazione
+            #    Input: (Tipo, (Tot15, N15, Tot25, N25))
+            .map(lambda x: (
+                x[0],                                      # TipoVeicolo
+                x[1][0] / x[1][1] if x[1][1] > 0 else 0,   # Media 2015 = Tot / N
+                x[1][2] / x[1][3] if x[1][3] > 0 else 0    # Media 2025 = Tot / N
+            ))
+            
+            # 5. POST-PROCESSING: Aggiungo colonna "Delta"
+            #    Input: (Tipo, Media15, Media25) -> Output: (Tipo, Media15, Media25, Diff)
+            .map(lambda x: (x[0], x[1], x[2], x[2] - x[1]))
+            )
 
-    rdd_parsed = rdd_data.map(parse_line)
-
-    # -----------------------------
-    # FILTER: Solo anni 2015 e 2025
-    # -----------------------------
-    rdd_filtered = rdd_parsed.filter(lambda x: x[1] in ["2015", "2025"])
-
-    # -----------------------------
-    # REDUCE: Calcolo media per (TipoVeicolo, Anno)
-    # -----------------------------
-    # Chiave: (TipoVeicolo, Anno), Valore: (somma_pedaggi, conteggio)
-    rdd_keyed = rdd_filtered.map(lambda x: ((x[0], x[1]), (x[2], 1)))
-
-    # Somma pedaggi e conteggi per chiave
-    rdd_summed = rdd_keyed.reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1]))
-
-    # Calcola media: somma / conteggio
-    rdd_avg = rdd_summed.map(lambda x: ((x[0][0], x[0][1]), round(x[1][0] / x[1][1], 2)))
-
-    # -----------------------------
-    # POST-PROCESSING: Riorganizza per TipoVeicolo
-    # -----------------------------
-    # Converti in: (TipoVeicolo, (Anno, Media))
-    rdd_by_tipo = rdd_avg.map(lambda x: (x[0][0], (x[0][1], x[1])))
-
-    # Raggruppa per TipoVeicolo
-    rdd_grouped = rdd_by_tipo.groupByKey()
-
-    # Costruisci risultato finale con variazione
-    def build_result(item):
-        tipo, values = item
-        data = dict(values)
-        media_2015 = data.get("2015", 0.0)
-        media_2025 = data.get("2025", 0.0)
-        variazione = round(media_2025 - media_2015, 2)
-        return (tipo, media_2015, media_2025, variazione)
-
-    rdd_result = rdd_grouped.map(build_result)
-
-    # -----------------------------
     # OUTPUT
-    # -----------------------------
-    print("\nRisultati Analisi PySpark:")
-    print(f"{'TipoVeicolo':<15} {'Media_2015':>12} {'Media_2025':>12} {'Variazione':>12}")
-    print("-" * 55)
-
-    for row in rdd_result.collect():
+    print(f"{'TipoVeicolo':<15} {'Media 2015':>12} {'Media 2025':>12} {'Variazione':>12}")
+    print("-" * 60)
+    
+    for row in stats.collect():
         print(f"{row[0]:<15} {row[1]:>12.2f} {row[2]:>12.2f} {row[3]:>12.2f}")
 
-    end_time = time.time()
-    print(f"\nTempo di esecuzione PySpark: {end_time - start_time:.2f} secondi")
-
-    # -----------------------------
-    # Chiudere SparkContext
-    # -----------------------------
+    end = time.time()
+    print(f"\nTempo di esecuzione PySpark: {end - start:.2f} secondi")
+    
     sc.stop()
 
 if __name__ == "__main__":
