@@ -1,78 +1,45 @@
-# Homework #1 – MongoDB
+# Homework #1 - MongoDB
 
 ## Amazon Fine Food Reviews Analysis
 
-**Corso**: Sistemi Informativi Evoluti e Big Data – A.A. 2025-2026  
-**Autore**: Camossi Filippo (m. 734170)
+Course: Advanced Information Systems and Big Data (SEBD) - Academic Year 2025-2026  
+Author: Filippo Camossi
 
-### Descrizione del Progetto
+## Project Overview
 
-Analisi completa del dataset Amazon Fine Food Reviews utilizzando **MongoDB** come database NoSQL per storage, aggregazione e analisi di grandi volumi di recensioni.
+This module analyzes the Amazon Fine Food Reviews dataset (about 568k records) with MongoDB as a document store.
+The goal is to combine document-based analytics, sentiment analysis, and recommendation logic in a single end-to-end pipeline.
 
----
+## Goals
 
-## Descrizione del Progetto
+- Ingest and organize large review data in MongoDB collections.
+- Run analytical queries with aggregation pipelines.
+- Apply VADER sentiment analysis with parameter tuning.
+- Build a hybrid recommender (collaborative + content + sentiment).
+- Study sentiment evolution over time.
 
-Questo homework implementa un sistema completo di analisi delle recensioni che include:
+## Tech Stack
 
-1. **Caricamento e Organizzazione Dati**
+- Python 3.8+
+- MongoDB (local instance on localhost:27017)
+- Jupyter Notebook
+- pymongo, pandas, scikit-learn, vaderSentiment, matplotlib, seaborn
 
-    - Import di ~568k recensioni in MongoDB
-    - Organizzazione in 6 collezioni separate per livello di score (1-5 + no_text)
-    - Struttura documento ottimizzata per query analitiche
+## Repository Structure
 
-2. **Sentiment Analysis con VADER**
-
-    - Analisi automatica del sentiment (positive/neutral/negative)
-    - Ottimizzazione parametri tramite grid search
-    - Accuracy migliorata rispetto ai parametri default
-
-3. **Query Analitiche**
-
-    - Distribuzione recensioni per score
-    - Top 5 prodotti con media score più alta
-    - Top 5 utenti più attivi
-    - Analisi correlazione score-sentiment
-    - Prodotti con alto score ma sentiment negativo
-
-4. **Sistema di Raccomandazione Ibrido**
-
-    - Collaborative Filtering (co-occorrenza utenti)
-    - Content-Based Filtering (TF-IDF similarity)
-    - Sentiment-Based Filtering (qualità)
-    - Score combinato pesato
-
-5. **Analisi Temporale Avanzata**
-    - Evoluzione mensile del sentiment
-    - Rilevamento automatico anomalie
-    - Visualizzazioni multi-linea
-    - Discussione adattamento sistema di raccomandazione
-
----
-
-## Struttura File
-
-```
+```text
 MongoDB/
-├── amazon_fine_food_reviews.ipynb    # Notebook principale
-├── Reviews.csv                        # Dataset (da scaricare)
-├── requirements.txt                   # Dipendenze Python
-└── README.md                          # Questo file
+|- amazon_fine_food_reviews.ipynb
+|- Reviews.csv
+|- requirements.txt
+`- README.md
 ```
 
----
+## Setup
 
-## Setup e Installazione
+1. Install MongoDB and start the service.
 
-### 1. Prerequisiti
-
--   **Python 3.8+**
--   **MongoDB** (installato e in esecuzione su `localhost:27017`)
--   **Jupyter Notebook**
-
-#### Installazione MongoDB
-
-**macOS (con Homebrew):**
+macOS (Homebrew):
 
 ```bash
 brew tap mongodb/brew
@@ -80,177 +47,65 @@ brew install mongodb-community
 brew services start mongodb-community
 ```
 
-**Linux (Ubuntu/Debian):**
+2. Download the dataset from Kaggle and place `Reviews.csv` in this folder:
+https://www.kaggle.com/datasets/snap/amazon-fine-food-reviews
 
-```bash
-sudo apt-get install mongodb
-sudo systemctl start mongodb
-sudo systemctl enable mongodb
-```
-
-**Windows:**
-Scarica l'installer da [mongodb.com](https://www.mongodb.com/try/download/community)
-
-### 2. Download Dataset
-
-Scarica il dataset da Kaggle:
-
--   Link: https://www.kaggle.com/datasets/snap/amazon-fine-food-reviews
--   File necessario: `Reviews.csv`
--   Posiziona il file nella cartella `MongoDB/`
-
-### 3. Installazione Dipendenze Python
+3. Install Python dependencies:
 
 ```bash
 cd MongoDB
 pip install -r requirements.txt
 ```
 
-### 4. Avvio Notebook
+## Run Locally
 
 ```bash
 jupyter notebook amazon_fine_food_reviews.ipynb
 ```
 
----
+Recommended execution order inside the notebook:
 
-## Esecuzione
+1. Data loading and MongoDB ingestion
+2. VADER parameter optimization
+3. Sentiment classification
+4. Aggregation-based analytics
+5. Hybrid recommendation
+6. Temporal analysis and plots
 
-1. **Verifica MongoDB in esecuzione:**
+## Key Implemented Features
 
-    ```bash
-    # Verifica che MongoDB sia attivo
-    mongosh  # oppure mongo
-    ```
+- Data split into score-based collections (1-5 plus no-text) for targeted analysis.
+- MongoDB aggregation pipelines for product, user, and sentiment insights.
+- VADER tuning through grid search to improve baseline accuracy.
+- Hybrid recommendation score combining:
+  - collaborative signals
+  - TF-IDF content similarity
+  - sentiment quality score
+- Monthly sentiment trend analysis with anomaly inspection.
 
-2. **Esegui le celle del notebook in ordine:**
-    - Setup e import librerie
-    - Caricamento dati in MongoDB
-    - Ottimizzazione parametri VADER (opzionale ma raccomandato)
-    - Sentiment analysis
-    - Query analitiche
-    - Sistema di raccomandazione
-    - Analisi temporale
+## Notable Technical Choices
 
-**Tempo stimato:** ~30-45 minuti (incluso caricamento dati)
+- Separate score collections were used to simplify some analytical slices and comparisons.
+- Recommendation combines heterogeneous signals with explicit weights for interpretability.
+- Temporal analysis is integrated with recommendation discussion to reason about model adaptation over time.
 
----
+## Expected Outcome
 
-## Dataset
+After a full run, you should obtain:
 
-**Amazon Fine Food Reviews**
-
--   **Fonte:** Kaggle
--   **Dimensione:** ~568,000 recensioni
--   **Periodo:** Ottobre 1999 - Ottobre 2012
--   **Campi principali:**
-    -   `ProductId`: ID prodotto
-    -   `UserId`: ID utente
-    -   `ProfileName`: Nome profilo utente
-    -   `Score`: Valutazione 1-5 stelle
-    -   `Summary`: Titolo recensione
-    -   `Text`: Testo completo recensione
-    -   `Time`: Timestamp Unix
-
----
-
-## Risultati Attesi
-
-Dopo l'esecuzione completa del notebook, avrai:
-
-✅ Database MongoDB popolato con recensioni organizzate  
-✅ Parametri VADER ottimizzati per questo dominio specifico  
-✅ Analisi statistiche complete con visualizzazioni  
-✅ Sistema di raccomandazione funzionante  
-✅ Report su evoluzione temporale del sentiment  
-✅ Discussione approfondita su design choices (collezioni multiple vs singola)
-
----
-
-## Metriche di Performance
-
-**Sentiment Analysis (con parametri ottimizzati):**
-
--   Accuracy: ~80-85% (rispetto a ground truth basato su score)
--   Precision/Recall bilanciati per tutte le classi
--   Miglioramento ~5-10% rispetto a parametri default VADER
-
-**Sistema di Raccomandazione:**
-
--   Tipo: Ibrido (Collaborative + Content-Based + Sentiment)
--   Pesi: 40% collaborative, 30% content, 30% sentiment
--   Top-N recommendations con score combinato
-
----
-
-## Query MongoDB Interessanti
-
-Alcune query MongoDB utilizzate nel progetto:
-
-```javascript
-// Top prodotti per media score
-db.score_5.aggregate([
-    { $group: { _id: "$product_id", avg_score: { $avg: "$score" } } },
-    { $sort: { avg_score: -1 } },
-    { $limit: 5 },
-]);
-
-// Distribuzione sentiment per score
-db.score_4.aggregate([{ $group: { _id: "$sentiment", count: { $sum: 1 } } }]);
-```
-
----
-
-## Dipendenze Principali
-
--   **pymongo**: Connessione e operazioni MongoDB
--   **pandas**: Manipolazione e analisi dati
--   **vaderSentiment**: Analisi sentiment
--   **scikit-learn**: TF-IDF e cosine similarity
--   **matplotlib/seaborn**: Visualizzazioni
-
-Vedi `requirements.txt` per la lista completa.
-
----
+- A populated MongoDB dataset for review analytics.
+- Sentiment labels and quality metrics.
+- Top products/users and score-sentiment correlation views.
+- Hybrid recommendations with explainable component scores.
 
 ## Troubleshooting
 
-### MongoDB non si connette
+- If MongoDB connection fails, verify the service is running (`mongosh` should connect).
+- If memory usage is high, reduce optimization sample size in the notebook.
+- If dataset is not found, confirm `Reviews.csv` is in the `MongoDB/` directory.
 
-```bash
-# Verifica che MongoDB sia in esecuzione
-brew services list  # macOS
-sudo systemctl status mongodb  # Linux
+## Related Docs
 
-# Avvia MongoDB se necessario
-brew services start mongodb-community  # macOS
-sudo systemctl start mongodb  # Linux
-```
-
-### Dataset non trovato
-
--   Assicurati che `Reviews.csv` sia nella stessa directory del notebook
--   Verifica che il nome file sia esattamente `Reviews.csv`
-
-### Errori di memoria
-
--   Il caricamento completo richiede ~2-3GB RAM
--   Riduci `sample_size_per_score` nell'ottimizzazione VADER se necessario
-
----
-
-## Documentazione Aggiuntiva
-
--   [MongoDB Documentation](https://docs.mongodb.com/)
--   [VADER Sentiment Analysis](https://github.com/cjhutto/vaderSentiment)
--   [Dataset su Kaggle](https://www.kaggle.com/datasets/snap/amazon-fine-food-reviews)
-
----
-
-## Possibili Estensioni
-
--   Implementazione indici MongoDB per ottimizzare le query
--   Sistema di raccomandazione con apprendimento online
--   Topic modeling (LDA) per identificare temi nelle recensioni
--   Dashboard interattiva con Streamlit o Dash
--   Analisi di network degli utenti (graph analysis)
+- Root portfolio: ../README.md
+- MongoDB docs: https://www.mongodb.com/docs/
+- VADER: https://github.com/cjhutto/vaderSentiment

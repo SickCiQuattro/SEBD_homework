@@ -1,145 +1,111 @@
-# Homework #2 – InfluxDB
+# Homework #2 - InfluxDB
 
-## Analisi dei Dati Criminali di Los Angeles
+## Los Angeles Crime Time-Series Analytics
 
-**Corso**: Sistemi Informativi Evoluti e Big Data – A.A. 2025-2026  
-**Autore**: Camossi Filippo (m. 734170)
+Course: Advanced Information Systems and Big Data (SEBD) - Academic Year 2025-2026  
+Author: Filippo Camossi
 
-### Descrizione del Progetto
+## Project Overview
 
-Questo progetto implementa un'analisi di dati time-series sui crimini di Los Angeles utilizzando **InfluxDB**, un database ottimizzato per serie temporali. L'obiettivo è analizzare pattern temporali, distribuzioni geografiche e applicare tecniche di clustering incrementale.
+This module analyzes Los Angeles crime data with InfluxDB as a time-series database.
+The objective is to combine temporal querying, spatial insights, and incremental machine learning for urban pattern analysis.
 
-### Dataset
+## Goals
 
-**Crime Data from 2020 to Present** - [Data.gov](https://catalog.data.gov/dataset/crime-data-from-2020-to-present)
+- Ingest high-volume event data into InfluxDB 2.x.
+- Query and aggregate with Flux for temporal and categorical trends.
+- Produce visual summaries for area/time crime dynamics.
+- Apply online clustering with River on geographic signals.
 
-Campi principali:
-- **DR_NO**: Numero identificativo del report
-- **Date Rptd / DATE OCC**: Data di segnalazione / occorrenza
-- **TIME OCC**: Ora del crimine
-- **AREA / AREA NAME**: Codice e nome dell'area
-- **Crm Cd / Crm Cd Desc**: Codice e descrizione del crimine
-- **Vict Age / Vict Sex**: Età e sesso della vittima
-- **LAT / LON**: Coordinate geografiche
+## Tech Stack
 
----
+- Python 3.8+
+- InfluxDB 2.x (localhost:8086)
+- Flux query language
+- Jupyter Notebook
+- influxdb-client, pandas, matplotlib, River
 
-## Struttura dei File
+## Repository Structure
 
-```
+```text
 InfluxDB/
-├── los_angeles_crime_data.ipynb   # Notebook principale
-├── Crime_Data_from_2020_to_Present.csv  # Dataset
-├── requirements.txt               # Dipendenze Python
-├── README.md                      # Questo file
-└── weather_data/                  # Dataset meteo (opzionale)
+|- los_angeles_crime_data.ipynb
+|- Crime_Data_from_2020_to_Present.csv
+|- weather_data/
+|- requirements.txt
+`- README.md
 ```
 
----
+## Setup
 
-## Installazione
+1. Install and start InfluxDB.
 
-### 1. Prerequisiti
+macOS (Homebrew):
 
-- **Python 3.8+**
-- **InfluxDB 2.x** (in esecuzione su `localhost:8086`)
-- **Jupyter Notebook**
-
-### 2. Installazione InfluxDB
-
-**macOS (con Homebrew):**
 ```bash
 brew install influxdb
 brew services start influxdb
 ```
 
-**Linux:**
-```bash
-wget https://dl.influxdata.com/influxdb/releases/influxdb2-2.7.1-linux-amd64.tar.gz
-tar xvzf influxdb2-2.7.1-linux-amd64.tar.gz
-./influxdb2-2.7.1-linux-amd64/influxd
-```
+2. Open the InfluxDB UI at http://localhost:8086 and configure:
 
-**Windows:**
-Scarica l'installer da [influxdata.com](https://portal.influxdata.com/downloads/)
+- organization (for example: `unibs`)
+- bucket (for example: `crime_data`)
+- API token
 
-### 3. Configurazione InfluxDB
+3. Download dataset and place it in this folder:
+https://catalog.data.gov/dataset/crime-data-from-2020-to-present
 
-1. Accedi a `http://localhost:8086`
-2. Crea un'organizzazione (es. `unibs`)
-3. Crea un bucket (es. `crime_data`)
-4. Genera un API token e aggiornalo nel notebook
-
-### 4. Download Dataset
-
-Scarica il dataset da Data.gov:
-- Link: https://catalog.data.gov/dataset/crime-data-from-2020-to-present
-- Posiziona il file `Crime_Data_from_2020_to_Present.csv` nella cartella `InfluxDB/`
-
-### 5. Installazione Dipendenze Python
+4. Install Python dependencies:
 
 ```bash
 cd InfluxDB
 pip install -r requirements.txt
 ```
 
----
-
-## Esecuzione
+## Run Locally
 
 ```bash
 jupyter notebook los_angeles_crime_data.ipynb
 ```
 
-Esegui le celle in ordine per:
-1. Connessione a InfluxDB e caricamento dati
-2. Query analitiche con Flux
-3. Visualizzazioni temporali
-4. Clustering incrementale con River
+Notebook flow:
 
----
+1. Connection and write pipeline
+2. Flux analytical queries
+3. Time-series and distribution visualizations
+4. Incremental clustering with River
 
-## Funzionalità Implementate
+## Key Implemented Features
 
-### 1. Caricamento Dati in InfluxDB
-- Batch writing ottimizzato (5000 punti/batch)
-- Gestione errori e retry automatico
-- Reset bucket per ambiente pulito
+- Optimized batch ingestion (5,000 points per write batch).
+- Flux-based analysis by area, crime type, time windows, and critical hours.
+- Time and geo-oriented visual exploration.
+- Online clustering to detect evolving spatial crime patterns.
 
-### 2. Query Analitiche (Flux)
-- Distribuzione crimini per area
-- Andamento temporale (giornaliero/mensile)
-- Analisi per tipo di crimine
-- Fasce orarie più critiche
+## Notable Technical Choices
 
-### 3. Visualizzazioni
-- Serie temporali con matplotlib
-- Heatmap geografiche
-- Grafici a barre per distribuzioni
+- Batch writes are tuned to balance throughput and reliability.
+- Query timeout/flush settings are configured to handle heavier operations.
+- Incremental modeling enables updates without full retraining.
 
-### 4. Clustering Incrementale
-- Algoritmo online con libreria River
-- Clustering su coordinate geografiche
-- Analisi pattern spaziali dei crimini
+## Expected Outcome
 
----
+After full execution you should obtain:
 
-## Tecnologie Utilizzate
+- InfluxDB bucket populated with crime events.
+- Reproducible temporal and categorical analytical views.
+- Visual insights on crime concentration and variation.
+- Incremental clustering outputs on geographic data.
 
-| Tecnologia | Utilizzo |
-|------------|----------|
-| **InfluxDB 2.x** | Database time-series |
-| **Flux** | Linguaggio di query |
-| **influxdb-client** | Client Python |
-| **River** | Machine Learning incrementale |
-| **pandas** | Manipolazione dati |
-| **matplotlib** | Visualizzazioni |
+## Troubleshooting
 
----
+- If connection fails, verify InfluxDB is running and token/org/bucket are correct.
+- If writes are slow, reduce batch size in the notebook and retry.
+- If query times out, simplify time ranges or increase timeout configuration.
 
-## Note Tecniche
+## Related Docs
 
-- **Batch Size**: 5000 punti per ottimizzare le scritture
-- **Timeout**: 30 secondi per query complesse
-- **Flush Interval**: 10 secondi per auto-flush
-- Il dataset completo contiene ~900k record
+- Root portfolio: ../README.md
+- InfluxDB docs: https://docs.influxdata.com/
+- River docs: https://riverml.xyz/

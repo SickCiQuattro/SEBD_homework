@@ -1,144 +1,59 @@
-# Sistemi Informativi Evoluti e Big Data
+# Advanced Information Systems & Big Data (SEBD)
 
-## Homework Repository – A.A. 2025-2026
+![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)
+![InfluxDB](https://img.shields.io/badge/InfluxDB-22ADF6?style=flat-square&logo=influxdb&logoColor=white)
+![Neo4j](https://img.shields.io/badge/Neo4j-018BFF?style=flat-square&logo=neo4j&logoColor=white)
+![Apache Spark](https://img.shields.io/badge/PySpark-E25A1C?style=flat-square&logo=apachespark&logoColor=white)
 
-**Autore**: Camossi Filippo (m. 734170)
+**Author:** Filippo Camossi
+**Academic Year:** 2025-2026
 
-Repository contenente i 4 homework del corso di Sistemi Informativi Evoluti e Big Data, focalizzati sull'utilizzo di database NoSQL e paradigmi di calcolo distribuito per l'analisi di Big Data.
+## 📖 Portfolio Overview
 
----
+This repository contains a collection of four distinct Big Data analytics projects developed for the _Advanced Information Systems and Big Data_ course. The portfolio explores the practical application of different **NoSQL databases** (Document, Time-Series, Graph) and **Distributed Computing paradigms** (MapReduce) on real-world and synthetic datasets.
 
-## 📚 Struttura del Repository
+The goal is to benchmark and compare data ingestion, complex querying, and machine learning integration (such as sentiment analysis, recommendation engines, and online clustering) across different technological stacks.
 
-```
-SEBD_homework/
-├── MongoDB/     # Homework #1 - Document Store
-├── InfluxDB/    # Homework #2 - Time Series Database
-├── Neo4j/       # Homework #3 - Graph Database
-├── MapReduce/   # Homework #4 - Distributed Computing
-└── README.md    # Questo file
-```
+## 🗂️ Repository Structure & Projects
 
----
+Each module is completely independent and contains its own specific documentation, source code, and Python requirements.
 
-## Homework #1 – MongoDB
+- 📦 **[Homework #1: MongoDB](./MongoDB/)**
+    - **Domain:** E-commerce (Amazon Fine Food Reviews, ~568k records).
+    - **Focus:** Document Store analytics, VADER Sentiment Analysis, and a Hybrid Recommendation System (Collaborative + Content-Based + Sentiment).
+- 📈 **[Homework #2: InfluxDB](./InfluxDB/)**
+    - **Domain:** Urban Security (Los Angeles Crime Data, ~900k records).
+    - **Focus:** Time-Series Database management, Flux analytical queries, spatial-temporal pattern recognition, and Incremental/Online Clustering using `River`.
+- 🕸️ **[Homework #3: Neo4j](./Neo4j/)**
+    - **Domain:** Scientific Research (ArXiv AI Papers).
+    - **Focus:** Graph Database modeling (Papers, Authors, Topics), Cypher queries, co-authorship network analysis, and weighted Jaccard (Ruzicka) similarity calculations.
+- 🚀 **[Homework #4: MapReduce](./MapReduce/)**
+    - **Domain:** Transportation (Highway Tolls, 100k records).
+    - **Focus:** Distributed Computing benchmark. Compares a pure Python implementation (`mrjob` / Hadoop Streaming) against Spark's DataFrame API (`PySpark`) to calculate inflation trends over a decade.
 
-**Obiettivo:** Analisi di recensioni di prodotti alimentari Amazon
+## 🚀 Quick Start
 
-### Contenuto
-- Dataset: **Amazon Fine Food Reviews** (~568k recensioni)
-- Caricamento dati in collezioni MongoDB organizzate per score
-- **Sentiment Analysis** con VADER (ottimizzazione parametri)
-- Query analitiche complesse con aggregation pipeline
-- **Sistema di raccomandazione ibrido** (collaborative + content-based + sentiment)
-- Analisi temporale dell'evoluzione del sentiment
+### General Prerequisites
 
-### Tecnologie
-`MongoDB` · `Python` · `VADER` · `scikit-learn` · `pandas`
-
-[Vai all'homework MongoDB →](./MongoDB/)
-
----
-
-## Homework #2 – InfluxDB
-
-**Obiettivo:** Analisi di dati time-series sui crimini di Los Angeles
-
-### Contenuto
-- Dataset: **Crime Data from 2020 to Present** (Data.gov)
-- Caricamento batch ottimizzato in InfluxDB
-- Query analitiche con linguaggio **Flux**
-- Visualizzazioni temporali e geografiche
-- **Clustering incrementale** con libreria River
-
-### Tecnologie
-`InfluxDB` · `Flux` · `Python` · `River` · `pandas` · `matplotlib`
-
-[Vai all'homework InfluxDB →](./InfluxDB/)
-
----
-
-## Homework #3 – Neo4j
-
-**Obiettivo:** Analisi di pubblicazioni scientifiche sull'Intelligenza Artificiale
-
-### Contenuto
-- Dataset: **ArXiv AI Papers** (paper, autori, topic)
-- Modello a grafo: `Paper`, `Author`, `Topic` con relazioni
-- Query Cypher per analisi di rete
-- **Similarità di Ruzicka** (Jaccard pesata) tra paper
-- Rete di co-authorship e percorsi minimi
-
-### Tecnologie
-`Neo4j` · `Cypher` · `Python` · `pandas` · `matplotlib`
-
-[Vai all'homework Neo4j →](./Neo4j/)
-
----
-
-## Homework #4 – MapReduce
-
-**Obiettivo:** Analisi pedaggi autostradali con paradigma MapReduce
-
-### Contenuto
-- Dataset: **100.000 transiti autostradali** (generato con Faker)
-- Confronto pedaggi 2015 vs 2025 (con inflazione 15-25%)
-- Implementazione **mrjob** (Hadoop streaming)
-- Implementazione **PySpark** (DataFrame API)
-- Benchmark prestazioni: mrjob ~0.50s vs PySpark ~2.37s
-
-### Tecnologie
-`mrjob` · `PySpark` · `Python` · `Faker` · `Hadoop`
-
-[Vai all'homework MapReduce →](./MapReduce/)
-
----
-
-## Quick Start
-
-### Prerequisiti Generali
 - **Python 3.8+**
-- **Jupyter Notebook** / JupyterLab
-- Database specifici per ogni homework (MongoDB, InfluxDB, Neo4j)
-- Apache Spark per Homework #4
+- **Jupyter Notebook / JupyterLab**
+- Specific database engines depending on the module (MongoDB, InfluxDB 2.x, Neo4j).
+- Java 8+ (Required for PySpark in HW#4).
 
-### Setup
+### Basic Setup
 
 ```bash
-# Clone del repository
-git clone <repository-url>
+# Clone the repository
+git clone [https://github.com/yourusername/SEBD_homework.git](https://github.com/yourusername/SEBD_homework.git)
 cd SEBD_homework
 
-# Setup homework specifico
-cd MongoDB  # o InfluxDB, Neo4j, MapReduce
+# Navigate to a specific project module
+cd MongoDB  # or InfluxDB, Neo4j, MapReduce
+
+# Install specific dependencies
 pip install -r requirements.txt
 
-# Avvio Jupyter (per notebook)
+# Launch Jupyter
 jupyter notebook
 ```
-
----
-
-## Note
-
-- Ogni homework è **completamente indipendente**
-- Le dipendenze Python sono specificate in ogni cartella (`requirements.txt`)
-- I dataset devono essere scaricati separatamente (vedi README specifici)
-- Assicurarsi che i database NoSQL siano installati e in esecuzione
-
----
-
-## Riepilogo Tecnologie
-
-| Homework | Database/Framework | Paradigma | Dataset Size |
-|----------|-------------------|-----------|--------------|
-| #1 | MongoDB | Document Store | ~568k record |
-| #2 | InfluxDB | Time Series | ~900k record |
-| #3 | Neo4j | Graph Database | ~10k paper |
-| #4 | mrjob + PySpark | MapReduce | 100k record |
-
----
-
-## Licenza
-
-Materiale didattico per uso accademico.

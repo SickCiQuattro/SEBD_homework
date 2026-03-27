@@ -1,164 +1,117 @@
-# Homework #3 – Neo4j
+# Homework #3 - Neo4j
 
 ## Artificial Intelligence Publication Trends
 
-**Corso**: Sistemi Informativi Evoluti e Big Data – A.A. 2025-2026  
-**Autore**: Camossi Filippo (m. 734170)
+Course: Advanced Information Systems and Big Data (SEBD) - Academic Year 2025-2026  
+Author: Filippo Camossi
 
-### Descrizione del Progetto
+## Project Overview
 
-Questo progetto implementa un'analisi di pubblicazioni scientifiche sull'Intelligenza Artificiale utilizzando **Neo4j**, un database a grafo. L'obiettivo è modellare relazioni tra paper, autori e topic, calcolando metriche di similarità e analizzando reti di co-authorship.
+This module models and analyzes AI publication data from ArXiv with Neo4j.
+It focuses on graph relationships among papers, authors, and topics, including co-authorship structures and similarity metrics.
 
-### Dataset
+## Goals
 
-**Artificial Intelligence Publication Trends** - ArXiv papers
+- Build a graph model for papers, authors, and topics.
+- Query publication trends and author productivity with Cypher.
+- Analyze co-authorship connectivity and shortest paths.
+- Compute weighted Jaccard (Ruzicka) topic similarity between papers/authors.
 
-File CSV:
-- `arxiv_papers.csv`: Informazioni sugli articoli (titolo, abstract, data, autori)
-- `papers_with_topics.csv`: Associazione paper-topic con probabilità
-- `topic_definitions.csv`: Definizioni dei topic estratti
+## Tech Stack
 
----
+- Python 3.8+
+- Neo4j Desktop or Neo4j Server
+- Cypher query language
+- Jupyter Notebook
+- neo4j Python driver, pandas, matplotlib
 
-## Struttura dei File
+## Repository Structure
 
-```
+```text
 Neo4j/
-├── artificial_intelligence_publication_trends.ipynb  # Notebook principale
-├── requirements.txt                                   # Dipendenze Python
-├── README.md                                          # Questo file
-├── Dataset/
-│   ├── arxiv_papers.csv
-│   ├── papers_with_topics.csv
-│   ├── topic_definitions.csv
-│   └── TopicExtractor.py
-└── Images/                                            # Screenshot query Neo4j
-    ├── Query1.png
-    ├── Query4.png
-    └── Query6.png
+|- artificial_intelligence_publication_trends.ipynb
+|- Dataset/
+|  |- arxiv_papers.csv
+|  |- papers_with_topics.csv
+|  |- topic_definitions.csv
+|  `- TopicExtractor.py
+|- Images/
+|- requirements.txt
+`- README.md
 ```
 
----
+## Setup
 
-## Installazione
+1. Install and start Neo4j.
 
-### 1. Prerequisiti
+macOS (Homebrew):
 
-- **Python 3.8+**
-- **Neo4j Desktop** o **Neo4j Community Server**
-- **Jupyter Notebook**
-
-### 2. Installazione Neo4j
-
-**Neo4j Desktop (consigliato):**
-Scarica da [neo4j.com/download](https://neo4j.com/download/)
-
-**macOS (con Homebrew):**
 ```bash
 brew install neo4j
 neo4j start
 ```
 
-**Docker:**
-```bash
-docker run -p 7474:7474 -p 7687:7687 neo4j:latest
-```
+Alternative: Neo4j Desktop or Docker image.
 
-### 3. Configurazione Neo4j
+2. Open Neo4j Browser at http://localhost:7474 and configure credentials.
 
-1. Avvia Neo4j e accedi a `http://localhost:7474`
-2. Imposta username/password (default: `neo4j`/`neo4j`)
-3. Aggiorna le credenziali nel notebook
-
-### 4. Installazione Dipendenze Python
+3. Install Python dependencies:
 
 ```bash
 cd Neo4j
 pip install -r requirements.txt
 ```
 
----
-
-## Esecuzione
+## Run Locally
 
 ```bash
 jupyter notebook artificial_intelligence_publication_trends.ipynb
 ```
 
----
+Recommended notebook flow:
 
-## Modello del Grafo
+1. Data loading and graph population
+2. Schema and constraints
+3. Cypher analytics (authors, trends, connectivity)
+4. Similarity calculations and graph visual outputs
 
-### Nodi
-- **Paper**: `{url, title, abstract, date}`
-- **Author**: `{name}`
-- **Topic**: `{id, name, keywords}`
+## Key Implemented Features
 
-### Relazioni
-- `(:Author)-[:AUTHORED]->(:Paper)` - Autore ha scritto paper
-- `(:Paper)-[:ON_TOPIC]->(:Topic)` - Paper tratta topic (con probabilità)
-- `(:Author)-[:COAUTHORED_WITH]-(:Author)` - Co-authorship tra autori
-- `(:Paper)-[:SIMILAR_TOPIC]-(:Paper)` - Similarità basata su topic
+- Graph schema with Paper, Author, Topic nodes.
+- Core relations: AUTHORED, ON_TOPIC, COAUTHORED_WITH, SIMILAR_TOPIC.
+- Top-author and trend queries.
+- Co-authorship shortest path analysis.
+- Topic-based similarity analysis using weighted Jaccard.
 
----
+## Notable Technical Choices
 
-## Query Implementate
+- Constraints on identifiers (for example paper URL and author name) support consistent ingestion.
+- Similarity edges are filtered with a threshold to avoid noisy links.
+- The Ruzicka metric was chosen to compare probabilistic topic vectors.
 
-### Query 1: Schema del Database
-Visualizzazione dello schema con `CALL db.schema.visualization()`
+## Similarity Formula
 
-### Query 2: Top 5 Autori per Numero di Articoli
-```cypher
-MATCH (a:Author)-[:AUTHORED]->(p:Paper)
-RETURN a.name AS author, COUNT(p) AS papers_count
-ORDER BY papers_count DESC LIMIT 5
-```
+Weighted Jaccard (Ruzicka) used for topic vectors:
 
-### Query 3: Andamento Temporale Pubblicazioni
-Distribuzione dei paper nel tempo (per anno/mese)
+sim_T(p, q) = sum_i min(p_i, q_i) / sum_i max(p_i, q_i)
 
-### Query 4: Percorso Più Breve tra Due Autori
-```cypher
-MATCH (a1:Author {name: 'Xin Wang'}), (a2:Author {name: 'Yang Li'})
-MATCH p = shortestPath((a1)-[:COAUTHORED_WITH*]-(a2))
-RETURN p
-```
+## Expected Outcome
 
-### Query 5: Similarità tra Autori
-Formula implementata:
-$$Sim(a_1, a_2) = \frac{1}{|P_1| \cdot |P_2|} \sum_{p_i \in P_1} \sum_{p_j \in P_2} sim_{T}(p_i, p_j)$$
+After full execution you should obtain:
 
-### Query 6: Rete Co-authorship Top 20 Autori
-Visualizzazione del sottografo di collaborazione
+- A populated Neo4j graph of papers/authors/topics.
+- Cypher query results for productivity and trend analysis.
+- Co-authorship network insights and shortest paths.
+- Similarity links derived from topic distributions.
 
----
+## Troubleshooting
 
-## Algoritmi Implementati
+- If authentication fails, verify credentials in notebook connection settings.
+- If import is slow, run writes in batches and check constraints before loading.
+- If query complexity is high, limit result sets during visual exploration.
 
-### Similarità di Ruzicka (Jaccard Pesata)
-Per calcolare la similarità tra paper basata sui topic:
+## Related Docs
 
-$$sim_{T}(p,q) = \frac{\sum_{i \in U_T} \min(p_i, q_i)}{\sum_{i \in U_T} \max(p_i, q_i)}$$
-
-Dove $p_i$ e $q_i$ sono le probabilità del topic $i$ per i paper $p$ e $q$.
-
----
-
-## Tecnologie Utilizzate
-
-| Tecnologia | Utilizzo |
-|------------|----------|
-| **Neo4j** | Database a grafo |
-| **Cypher** | Linguaggio di query |
-| **neo4j (Python)** | Driver ufficiale |
-| **pandas** | Manipolazione dati |
-| **matplotlib** | Visualizzazioni |
-
----
-
-## Note Tecniche
-
-- **Batch Size**: 1000 record per ottimizzare le scritture
-- **Constraints**: Unicità su Paper.url, Author.name, Topic.id
-- **Soglia Similarità**: 0.15 per relazioni SIMILAR_TOPIC
-- I paper sono tutti del 2021 (dataset ArXiv specifico)
+- Root portfolio: ../README.md
+- Neo4j docs: https://neo4j.com/docs/
+- Cypher manual: https://neo4j.com/docs/cypher-manual/current/
