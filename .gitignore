@@ -1,3 +1,8 @@
 MongoDB/Reviews.csv
 InfluxDB/Crime_Data_from_2020_to_Present.csv
 /InfluxDB/weather_data
+
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store

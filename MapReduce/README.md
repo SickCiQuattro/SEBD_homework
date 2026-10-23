@@ -1,115 +1,38 @@
-# Homework #4 - MapReduce
+# MapReduce: highway tolls
 
-## Highway Toll Analytics (mrjob vs PySpark)
+Computes the average toll per vehicle class in 2015 and 2025 from a synthetic dataset of 100,000 toll records, and compares two implementations: mrjob (Hadoop Streaming style) and PySpark. Homework #4 for the SEBD course.
 
-Course: Advanced Information Systems and Big Data (SEBD) - Academic Year 2025-2026  
-Author: Filippo Camossi
+## What it does
 
-## Project Overview
+- `DatasetGenerator.py` builds `caselli_autostradali.csv` with Faker.
+- `mapreduce_mrjob.py` emits `(vehicle_type, [count_2015, sum_2015, count_2025, sum_2025])` from the mapper, combines partial results locally, and computes averages and the decade variation in the reducer. The combiner cuts shuffle traffic, and carrying count and sum together keeps the averages correct.
+- `mapreduce_pyspark.py` does the same aggregation with the DataFrame API and lets Catalyst optimize it.
+- Both report the absolute and percentage change per vehicle class, and the runtime of each approach.
 
-This module analyzes synthetic highway toll data to compute the average toll by vehicle type in 2015 and 2025.
-It also benchmarks two distributed-computing approaches: a classic MapReduce pipeline with mrjob and a PySpark DataFrame implementation.
-
-## Goals
-
-- Generate a realistic toll dataset with 100,000 records.
-- Compute per-vehicle averages for 2015 and 2025.
-- Measure decade variation and inflation-like trend.
-- Compare implementation style and execution overhead (mrjob vs PySpark).
-
-## Tech Stack
+## Requirements
 
 - Python 3.8+
-- mrjob (Hadoop Streaming style)
-- PySpark (DataFrame API)
-- Faker (synthetic dataset generation)
-- Java 8+ (required by Spark)
+- Java 8+ with `JAVA_HOME` set (needed by Spark)
 
-## Repository Structure
-
-```text
-MapReduce/
-|- DatasetGenerator.py
-|- mapreduce_mrjob.py
-|- mapreduce_pyspark.py
-|- caselli_autostradali.csv
-|- requirements.txt
-`- README.md
-```
-
-## Setup
-
-Install dependencies:
+## Usage
 
 ```bash
-cd MapReduce
 pip install -r requirements.txt
-```
 
-Environment notes:
-
-- PySpark requires Java 8+ and `JAVA_HOME` configured.
-- The mrjob script includes a compatibility fix for Python 3.13 (`pipes` replacement).
-
-## Run Locally
-
-1. Generate dataset:
-
-```bash
 python DatasetGenerator.py
-```
-
-2. Run mrjob pipeline:
-
-```bash
 python mapreduce_mrjob.py caselli_autostradali.csv
-```
-
-3. Run PySpark implementation:
-
-```bash
 python mapreduce_pyspark.py
 ```
 
-## Key Implemented Features
-
-- Synthetic but realistic transport dataset generation.
-- Mapper/Combiner/Reducer pipeline for grouped averages.
-- Equivalent PySpark DataFrame aggregation flow.
-- Side-by-side runtime comparison and qualitative trade-off analysis.
-
-## Notable Technical Choices
-
-- Combiner is explicitly used in mrjob to reduce shuffle traffic.
-- Aggregation tracks both count and sum for each year to preserve average correctness.
-- Spark implementation delegates optimization to Catalyst for grouped aggregations.
-
-## MapReduce Logic Summary
-
-- Mapper emits: `(vehicle_type, [count_2015, sum_2015, count_2025, sum_2025])`
-- Combiner performs local partial aggregation.
-- Reducer computes final averages and variation by vehicle class.
-
-Average formula:
-
-mean = sum(values) / count(values)
-
-## Expected Outcome
-
-After running both implementations you should obtain:
-
-- Average toll values by vehicle class for 2015 and 2025.
-- Absolute and percentage variation over the decade.
-- Runtime comparison showing overhead differences in local execution.
+> [!NOTE]
+> `mapreduce_mrjob.py` includes a compatibility patch for the removed `pipes` module on Python 3.13.
 
 ## Troubleshooting
 
-- If PySpark fails, verify Java installation and `JAVA_HOME`.
-- If CSV is missing, run `DatasetGenerator.py` first.
-- If mrjob behavior changes on newer Python versions, use the included compatibility patch.
+- PySpark fails to start: check the Java install and `JAVA_HOME`.
+- CSV missing: run `DatasetGenerator.py` first.
 
-## Related Docs
+## Files
 
-- Root portfolio: ../README.md
-- mrjob docs: https://mrjob.readthedocs.io/
-- Spark docs: https://spark.apache.org/docs/latest/
+- `MapReduce_Camossi.pdf`: written report
+- `Homework_MapReduce_2025.2026.pdf`: assignment
